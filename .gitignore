@@ -1,2 +1,6 @@
+data.txt
 
+.idea/
+__pycache__/
+agents/__pycache__/
 .ipynb_checkpoints/
