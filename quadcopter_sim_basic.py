@@ -3,7 +3,7 @@ import time
 import logging
 import numpy as np
 from task import Task
-from agents.basic import Basic_Agent
+from agents.basic_agent import Basic_Agent
 from stats import plot
 
 

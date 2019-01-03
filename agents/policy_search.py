@@ -1,9 +1,13 @@
 import numpy as np
 from task import Task
 
-class PolicySearch_Agent():
+
+class PolicySearch():
     def __init__(self, task):
         # Task (environment) information
+        self.total_reward = 0.0
+        self.count = 0
+        self.score = 0
         self.task = task
         self.state_size = task.state_size
         self.action_size = task.action_size
