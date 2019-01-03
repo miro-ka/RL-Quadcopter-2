@@ -167,7 +167,7 @@ class DQNAgent:
             rotor_velocity[3] -= delta_change
 
         # If one of the velocity is negative just set it to zero
-        for idx, velocity in enumerate(rotor_velocity):
-            if velocity < 0.0:
-                rotor_velocity[idx] = 0.0
+        #for idx, velocity in enumerate(rotor_velocity):
+        #    if velocity < 0.0:
+        #        rotor_velocity[idx] = 0.0
         return rotor_velocity

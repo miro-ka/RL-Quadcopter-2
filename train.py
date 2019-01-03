@@ -14,15 +14,8 @@ num_episodes = 1000
 score_buffer = []
 sim_pose = []
 sim_velocity = []
+delta_change = 5
 
-
-def initialize_task(init_pose, init_velocities, target_pos, init_angle_velocities):
-    """
-    Initializes task
-    """
-    task = Task(init_pose=init_pose, target_pos=target_pos, init_velocities=init_velocities,
-                init_angle_velocities=init_angle_velocities)
-    return task
 
 def train():
     """
@@ -31,10 +24,12 @@ def train():
     logging.info("Starting simulation...")
 
     # Initialization
-    task = initialize_task(init_pose=np.array([0., 0., 0., 0., 0., 0.]),
-                           target_pos=np.array([0., 0., 10.]),
-                           init_velocities = np.array([0., 0., 0.]),
-                           init_angle_velocities = np.array([0., 0., 0.]))
+    task = Task(init_pose=np.array([0., 0., 0., 0., 0., 0.]),
+                target_pos=np.array([0., 0., 10.]),
+                init_velocities = np.array([0., 0., 0.]),
+                init_angle_velocities = np.array([0., 0., 0.]),
+                action_size = 16)
+
     agent = DQNAgent(task)
 
     for i_episode in range(1, num_episodes + 1):
@@ -44,9 +39,10 @@ def train():
         rotor_velocity = [0.0, 0.0, 0.0, 0.0]
         while True:
             action = agent.act(state)
-            rotor_velocity = agent.actions_to_rotor_velocity(rotor_velocity, action)
-            next_state, reward, done = task.step(action)
-            # print(rotor_velocity, action.tolist().index(1), reward, agent.score)
+            rotor_velocity = agent.actions_to_rotor_velocity(rotor_velocity, action, delta_change)
+            rotor_velocity = [10, 10, 10, 10]
+            next_state, reward, done = task.step(rotor_velocity)
+            print(rotor_velocity, action.tolist().index(1), reward, agent.score)
             agent.step(reward, done)
             agent.remember(state, action, reward, next_state, done)
             state = next_state
