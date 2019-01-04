@@ -1,5 +1,6 @@
 data.txt
 
+.DS_Store
 .idea/
 __pycache__/
 agents/__pycache__/
