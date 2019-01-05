@@ -23,22 +23,40 @@ class Task:
         self.action_repeat = 3
         self.duration_step = 0
         self.state_size = self.action_repeat * 6
-        self.action_low = 0
+        self.action_low = 300
         self.action_high = 900
         self.action_size = action_size
+        self.previous_pos = self.sim.init_pose[:3]
 
         # Goal
         self.target_pos = target_pos if target_pos is not None else np.array([0., 0., 10.]) 
 
     def get_reward(self):
         """Uses current pose of sim to return reward."""
-        reward = math.sqrt((self.sim.pose[0] - self.target_pos[0])**2 +
-                             (self.sim.pose[1] - self.target_pos[1])**2 +
-                             (self.sim.pose[2] - self.target_pos[2])**2)
-        reward = 1. - .3*(abs(self.sim.pose[2] - self.target_pos[2])).sum()
-        # reward = 1.-.3*(abs(self.sim.pose[:3] - self.target_pos)).sum()
-        # self.duration_step += 0.1
-        # reward = 1 - distance - self.duration_step
+        # *** FLY_UP REWARD ***
+        # punish if the rotors velocity distance (in our case all rotors should have the same value)
+        # rotors_speed_delta = (np.average(rotor_speeds) - np.max(rotor_speeds)) / 100
+
+        reward = 0
+        # Give Reward if we achieve target/goal
+        if self.sim.pose[2] >= self.target_pos[2]:
+            reward += 5
+
+        # Punish if we are losing altitude
+        # altitude_gain_reward = -20 if self.sim.init_pose[2] >= self.sim.pose[2] else 0.5
+
+        # Reward if the altitude is increasing
+        altitude_gain_reward = 5 if self.previous_pos[2] <= self.sim.pose[2] else -3
+        reward += altitude_gain_reward
+        # print('self.previous_pos[2]:', self.previous_pos[2], "self.sim.pose[2]:", self.sim.pose[2], "reward:", reward)
+        # target_distance = self.sim.init_pose[2] - self.target_pos[2]
+        # z_distance_offset = (self.sim.pose[2] - self.target_pos[2])
+        # z_delta = z_distance_offset - (self.target_pos[2] - self.sim.pose[2])
+        # reward += z_delta
+        # Reward current-target position
+        target_distance_reward = 1. - .3*(abs(self.sim.pose[2] - self.target_pos[2])).sum()
+        # reward = altitude_gain_reward + z_distance_offset # + target_distance_reward  # + rotors_speed_delta
+        reward += target_distance_reward
         return reward
 
     def step(self, rotor_speeds):
@@ -46,15 +64,17 @@ class Task:
         reward = 0
         pose_all = []
         for _ in range(self.action_repeat):
-            done = self.sim.next_timestep(rotor_speeds) # update the sim pose and velocities
+            done = self.sim.next_timestep(rotor_speeds)  # update the sim pose and velocities
             reward += self.get_reward()
             pose_all.append(self.sim.pose)
         next_state = np.concatenate(pose_all)
+        self.duration_step += 1
         return next_state, reward, done
 
     def reset(self):
         """Reset the sim to start a new episode."""
         self.sim.reset()
         self.duration_step = 0
+        self.previous_pos = self.sim.init_pose[:3]
         state = np.concatenate([self.sim.pose] * self.action_repeat) 
         return state
